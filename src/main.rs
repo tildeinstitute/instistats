@@ -15,14 +15,14 @@ struct Server {
     name: String,
     url: String,
     signup_url: String,
-    user_count: Option<u32>,
+    user_count: usize,
     want_users: bool,
     admin_email: String,
     description: String,
-    users: Option<Vec<User>>,
+    users: Vec<User>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 struct User {
     name: String,
     title: String,
@@ -46,12 +46,6 @@ fn main() {
     };
     println!();
 
-    let conf = fs::read_to_string(CONF_PATH).expect("Could not read config file");
-    let conf_yaml: Server =
-        serde_yaml::from_str(&conf).expect("Could not parse config data as YAML");
-
-    eprintln!("{:#?}", conf_yaml);
-
     let home_dir = WalkDir::new("/home").follow_links(true).max_depth(1);
     let mut users_list = Vec::new();
     home_dir.into_iter().for_each(|d| {
@@ -73,8 +67,6 @@ fn main() {
             }
         }
     });
-
-    eprintln!("{:?}", users_list);
 
     let mut users_struct = Vec::new();
     users_list.iter().for_each(|user| {
@@ -126,5 +118,29 @@ fn main() {
         });
     });
 
-    eprintln!("{:#?}", users_struct);
+    let conf = fs::read_to_string(CONF_PATH).expect("Could not read config file");
+    let conf_yaml: serde_yaml::Value =
+        serde_yaml::from_str(&conf).expect("Could not parse config data as YAML");
+
+    let mut conf_yaml = Server {
+        name: conf_yaml["name"].as_str().unwrap().to_string(),
+        url: conf_yaml["url"].as_str().unwrap().to_string(),
+        signup_url: conf_yaml["signup_url"].as_str().unwrap().to_string(),
+        user_count: 0,
+        want_users: conf_yaml["want_users"].as_bool().unwrap(),
+        admin_email: conf_yaml["admin_email"].as_str().unwrap().to_string(),
+        description: conf_yaml["description"].as_str().unwrap().to_string(),
+        users: Vec::new(),
+    };
+
+    users_struct.iter().for_each(|user| {
+        conf_yaml.users.push(user.clone());
+    });
+
+    conf_yaml.user_count = users_struct.len();
+
+    let json = serde_json::to_string(&conf_yaml).unwrap();
+    fs::write(out_path, &json).unwrap();
+
+    println!("File written successfully! Please inspect it: {}", out_path);
 }
