@@ -1,10 +1,11 @@
+use std::env;
 use std::fs;
+use std::process;
 
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 
 const VERS: &str = "v0.1";
-const OUT_PATH: &str = "/var/www/htdocs/tilde.json";
 const CONF_PATH: &str = "instistats.yml";
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -30,7 +31,17 @@ fn main() {
     println!("instistats {}", VERS);
     println!("(c) 2019 Ben Morrison - ISC License");
     println!();
-    println!("Path: {}", OUT_PATH);
+    let args = env::args().collect::<Vec<String>>();
+    let out_path = match args[1].trim() {
+        "-h" | "--help" => {
+            println!("The only argument should be the path to save the tilde.json file.\nEx: /var/www/htdocs/tilde.json");
+            process::exit(0);
+        }
+        out_path => {
+            println!("Output Location: {}", out_path);
+            out_path
+        }
+    };
     println!();
 
     let conf = fs::read_to_string(CONF_PATH).expect("Could not read config file");
