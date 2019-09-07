@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -19,6 +20,7 @@ struct Server {
     want_users: bool,
     admin_email: String,
     description: String,
+    last_generated: String,
     users: Vec<User>,
 }
 
@@ -122,6 +124,8 @@ fn main() {
     let conf_yaml: serde_yaml::Value =
         serde_yaml::from_str(&conf).expect("Could not parse config data as YAML");
 
+    let last_generated = Utc::now().to_rfc2822();
+
     let mut conf_yaml = Server {
         name: conf_yaml["name"].as_str().unwrap().to_string(),
         url: conf_yaml["url"].as_str().unwrap().to_string(),
@@ -130,6 +134,7 @@ fn main() {
         want_users: conf_yaml["want_users"].as_bool().unwrap(),
         admin_email: conf_yaml["admin_email"].as_str().unwrap().to_string(),
         description: conf_yaml["description"].as_str().unwrap().to_string(),
+        last_generated,
         users: Vec::new(),
     };
 
