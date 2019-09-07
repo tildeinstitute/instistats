@@ -72,18 +72,16 @@ fn main() {
 
     let last_generated = Utc::now().to_rfc2822();
 
-    let mut conf_yaml = Server {
+    let conf_yaml = Server {
         name: conf_yaml["name"].as_str().unwrap().to_string(),
         url: conf_yaml["url"].as_str().unwrap().to_string(),
         signup_url: conf_yaml["signup_url"].as_str().unwrap().to_string(),
-        user_count: 0,
+        user_count,
         want_users: conf_yaml["want_users"].as_bool().unwrap(),
         admin_email: conf_yaml["admin_email"].as_str().unwrap().to_string(),
         description: conf_yaml["description"].as_str().unwrap().to_string(),
         last_generated,
     };
-
-    conf_yaml.user_count = user_count;
 
     let json = serde_json::to_string(&conf_yaml).unwrap();
     fs::write(out_path, &json).unwrap();
