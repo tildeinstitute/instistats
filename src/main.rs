@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml;
 use walkdir::WalkDir;
 
-const VERS: &str = "v0.1";
+const VERS: &str = "v0.1-only_user_count";
 const CONF_PATH: &str = "instistats.yml";
 
 #[derive(Debug, Deserialize, Serialize)]
