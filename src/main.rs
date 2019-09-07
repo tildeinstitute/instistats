@@ -75,4 +75,56 @@ fn main() {
     });
 
     eprintln!("{:?}", users_list);
+
+    let mut users_struct = Vec::new();
+    users_list.iter().for_each(|user| {
+        let path = format!("/home/{}/public_html/index.html", user);
+        let path = Path::new(&path);
+        let index_file = if let Ok(file) = fs::read_to_string(path) {
+            file
+        } else {
+            return;
+        };
+        let mut title = String::new();
+        index_file.split("\n").for_each(|line| {
+            if line.contains("<title>") {
+                let title_line = line
+                    .split("<title>")
+                    .map(|s| s.to_string())
+                    .collect::<Vec<String>>();
+                let title_line = title_line
+                    .iter()
+                    .map(|s| {
+                        s.split("</title>")
+                            .map(|s| s.to_string())
+                            .collect::<Vec<String>>()
+                    })
+                    .flatten()
+                    .collect::<Vec<String>>();
+                title_line.iter().for_each(|e| {
+                    if !e.contains("<title>") && !e.contains("</title>") {
+                        title.push_str(e);
+                    }
+                })
+            }
+        });
+
+        let meta = fs::metadata(path);
+        let mtime = format!(
+            "{}",
+            meta.unwrap()
+                .modified()
+                .unwrap()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        );
+        users_struct.push(User {
+            name: user.to_string(),
+            title,
+            mtime,
+        });
+    });
+
+    eprintln!("{:#?}", users_struct);
 }
