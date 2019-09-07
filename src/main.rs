@@ -49,6 +49,11 @@ fn main() {
     println!();
 
     let home_dir = WalkDir::new("/home").follow_links(true).max_depth(1);
+    let user_count = fs::read_dir("/home")
+        .unwrap()
+        .map(|d| d.unwrap())
+        .collect::<Vec<fs::DirEntry>>()
+        .len();
     let mut users_list = Vec::new();
     home_dir.into_iter().for_each(|d| {
         if let Ok(p) = d {
@@ -142,7 +147,7 @@ fn main() {
         conf_yaml.users.push(user.clone());
     });
 
-    conf_yaml.user_count = users_struct.len();
+    conf_yaml.user_count = user_count;
 
     let json = serde_json::to_string(&conf_yaml).unwrap();
     fs::write(out_path, &json).unwrap();
