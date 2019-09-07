@@ -1,7 +1,6 @@
 use chrono::prelude::*;
 use std::env;
 use std::fs;
-use std::path::Path;
 use std::process;
 
 use serde::{Deserialize, Serialize};
@@ -21,14 +20,6 @@ struct Server {
     admin_email: String,
     description: String,
     last_generated: String,
-    users: Vec<User>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-struct User {
-    name: String,
-    title: String,
-    mtime: String,
 }
 
 fn main() {
@@ -75,56 +66,6 @@ fn main() {
         }
     });
 
-    let mut users_struct = Vec::new();
-    users_list.iter().for_each(|user| {
-        let path = format!("/home/{}/public_html/index.html", user);
-        let path = Path::new(&path);
-        let index_file = if let Ok(file) = fs::read_to_string(path) {
-            file
-        } else {
-            return;
-        };
-        let mut title = String::new();
-        index_file.split("\n").for_each(|line| {
-            if line.contains("<title>") {
-                let title_line = line
-                    .split("<title>")
-                    .map(|s| s.to_string())
-                    .collect::<Vec<String>>();
-                let title_line = title_line
-                    .iter()
-                    .map(|s| {
-                        s.split("</title>")
-                            .map(|s| s.to_string())
-                            .collect::<Vec<String>>()
-                    })
-                    .flatten()
-                    .collect::<Vec<String>>();
-                title_line.iter().for_each(|e| {
-                    if !e.contains("<title>") && !e.contains("</title>") {
-                        title.push_str(e);
-                    }
-                })
-            }
-        });
-
-        let meta = fs::metadata(path);
-        let mtime = format!(
-            "{}",
-            meta.unwrap()
-                .modified()
-                .unwrap()
-                .duration_since(std::time::SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-        );
-        users_struct.push(User {
-            name: user.to_string(),
-            title,
-            mtime,
-        });
-    });
-
     let conf = fs::read_to_string(CONF_PATH).expect("Could not read config file");
     let conf_yaml: serde_yaml::Value =
         serde_yaml::from_str(&conf).expect("Could not parse config data as YAML");
@@ -140,12 +81,7 @@ fn main() {
         admin_email: conf_yaml["admin_email"].as_str().unwrap().to_string(),
         description: conf_yaml["description"].as_str().unwrap().to_string(),
         last_generated,
-        users: Vec::new(),
     };
-
-    users_struct.iter().for_each(|user| {
-        conf_yaml.users.push(user.clone());
-    });
 
     conf_yaml.user_count = user_count;
 
