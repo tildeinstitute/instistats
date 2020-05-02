@@ -5,5 +5,5 @@ This is aimed at social UNIX boxes referred to as `tildes`, but is created for [
 
 The branch `only_user_count` omits user-specific data in favor of just a user count. This is the mode of operation for [`tilde.institute`](https://tilde.institute)
 
-It's kind of a rite-of-passage for a `tildeverse` member box to have its own script to generate this data, but I'm putting it up
+Usually a `tildeverse` member box will have its own script to generate this data, but I'm putting it up
 here in case anyone else wants to use it.
